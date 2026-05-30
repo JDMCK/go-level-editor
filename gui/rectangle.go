@@ -1,4 +1,4 @@
-package ui
+package gui
 
 type Rectangle struct {
 	x, y          int

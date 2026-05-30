@@ -1,4 +1,4 @@
-package ui
+package gui
 
 import (
 	"bytes"
@@ -52,8 +52,15 @@ func (t *Text) CenterInRectangle(rect Rectangle) {
 	dy := rect.height - t.rect.height
 	newX := dx / 2
 	newY := dy / 2
-	t.rect.x += newX
-	t.rect.y += newY
+	t.rect.x = rect.x + newX
+	t.rect.y = rect.y + newY
+}
+
+func (t *Text) SetValue(value string) {
+	t.value = value
+	w, h := text.Measure(value, t.face, 0)
+	t.rect.width = int(w)
+	t.rect.height = int(h)
 }
 
 func (t *Text) Update() {}

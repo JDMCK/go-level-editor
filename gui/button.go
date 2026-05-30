@@ -1,4 +1,4 @@
-package ui
+package gui
 
 import (
 	"image/color"
@@ -40,7 +40,7 @@ const (
 )
 
 var buttonColors = map[ButtonColor]color.Color{
-	Primary:   color.RGBA{10, 20, 255, 255},
+	Primary:   color.RGBA{10, 70, 255, 255},
 	Secondary: color.Gray{200},
 	Danger:    color.RGBA{255, 20, 20, 255},
 }
@@ -84,6 +84,10 @@ func NewButtonFromImage(
 func NewBasicButton(label string, x, y int, size ButtonSize, col ButtonColor, onClick func()) *Button {
 	width := buttonSizes[size]
 	return NewButton(label, width, DefaultButtonHeight, x, y, DefaultFontSize, buttonColors[col], onClick)
+}
+
+func (b *Button) SetColor(col color.Color) {
+	b.img.Fill(col)
 }
 
 func (b *Button) Update() {

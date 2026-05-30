@@ -2,25 +2,27 @@ package main
 
 import (
 	"fmt"
-	"level-editor/ui"
+	gui "level-editor/gui"
 	"log"
 
 	eb "github.com/hajimehoshi/ebiten/v2"
 )
 
 type Editor struct {
-	GUI []ui.Element
+	GUI []gui.Element
 }
 
 var editor *Editor
 
 func init() {
-	gui := make([]ui.Element, 0)
-	gui = append(gui, ui.NewBasicButton("Save", 50, 50, ui.Large, ui.Primary, func() { fmt.Println("Saved") }))
-	gui = append(gui, ui.NewBasicButton("Cancel", 50, 100, ui.Small, ui.Secondary, func() { fmt.Println("Cancel") }))
-	gui = append(gui, ui.NewBasicButton("Delete", 50, 150, ui.Medium, ui.Danger, func() { fmt.Println("Delete") }))
+	guiEls := make([]gui.Element, 0)
+	guiEls = append(guiEls, gui.NewBasicButton("Save", 50, 50, gui.Large, gui.Primary, func() { fmt.Println("Saved") }))
+	guiEls = append(guiEls, gui.NewBasicButton("Cancel", 50, 100, gui.Small, gui.Secondary, func() { fmt.Println("Cancel") }))
+	guiEls = append(guiEls, gui.NewBasicButton("Delete", 50, 150, gui.Medium, gui.Danger, func() { fmt.Println("Delete") }))
+	guiEls = append(guiEls, gui.NewNumberPicker(1, 5, 0, 50, 200))
+	guiEls = append(guiEls, gui.NewCheckbox(50, 250))
 	editor = &Editor{
-		GUI: gui,
+		GUI: guiEls,
 	}
 }
 
