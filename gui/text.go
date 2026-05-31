@@ -66,7 +66,7 @@ func (t *Text) SetValue(value string) {
 func (t *Text) Update() {}
 
 func (t *Text) Draw(screen *ebiten.Image) {
-	op := &text.DrawOptions{}
-	op.GeoM.Translate(float64(t.rect.x), float64(t.rect.y))
-	text.Draw(screen, t.value, t.face, op)
+	txtOp := &text.DrawOptions{}
+	txtOp.GeoM.Translate(float64(t.rect.x), float64(t.rect.y))
+	text.Draw(screen, t.value, t.face, txtOp)
 }

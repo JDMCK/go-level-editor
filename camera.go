@@ -1,0 +1,36 @@
+package main
+
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
+
+type Camera struct {
+	focusX  float64
+	focusY  float64
+	offsetX float64
+	offsetY float64
+	zoom    float64
+}
+
+const MoveUpKey = ebiten.KeyW
+const MoveDownKey = ebiten.KeyS
+const MoveLeftKey = ebiten.KeyA
+const MoveRightKey = ebiten.KeyD
+const FreeMoveKey = ebiten.KeySpace
+const Primary = ebiten.MouseButtonLeft
+const Secondary = ebiten.MouseButtonRight
+const MovementSpeed = 10
+
+func NewCamera() *Camera {
+	return &Camera{
+		zoom: 1,
+	}
+}
+
+func (c *Camera) DrawOptions() *ebiten.DrawImageOptions {
+	op := ebiten.DrawImageOptions{}
+	op.GeoM.Translate(-c.focusX, -c.focusY)
+	op.GeoM.Scale(c.zoom, c.zoom)
+	op.GeoM.Translate(c.offsetX, c.offsetY)
+	return &op
+}

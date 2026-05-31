@@ -4,7 +4,7 @@ import "github.com/hajimehoshi/ebiten/v2"
 
 type Element interface {
 	Update()
-	Draw(screen *ebiten.Image)
+	Draw(dst *ebiten.Image)
 }
 
 type Input interface {

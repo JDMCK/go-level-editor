@@ -100,15 +100,11 @@ func (b *Button) Update() {
 }
 
 func (b *Button) Draw(screen *ebiten.Image) {
-	op := ebiten.DrawImageOptions{}
+	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(b.rect.x), float64(b.rect.y))
 	if b.isHovered {
 		op.ColorScale.ScaleWithColor(color.Gray{200}) // darken on hover
 	}
-	screen.DrawImage(b.img, &op)
+	screen.DrawImage(b.img, op)
 	b.label.Draw(screen)
-}
-
-func (b *Button) GetValue() string {
-	return b.value
 }
