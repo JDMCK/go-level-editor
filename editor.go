@@ -11,6 +11,9 @@ import (
 type Editor struct {
 	camera *Camera
 	GUI    []gui.Element
+
+	prevCursorX int
+	prevCursorY int
 }
 
 type Drawable interface {
@@ -38,14 +41,18 @@ func (e *Editor) Update() error {
 	}
 
 	if ebiten.IsKeyPressed(FreeMoveKey) && ebiten.IsMouseButtonPressed(Primary) {
-
+		x, y := ebiten.CursorPosition()
+		dx := x - e.prevCursorX
+		dy := y - e.prevCursorY
+		e.camera.focusX += float64(dx)
+		e.camera.focusY += float64(dy)
 		return nil
 	}
-	handleCameraMovement(e)
+	handleKeyboardCameraMovement(e)
 	return nil
 }
 
-func handleCameraMovement(e *Editor) {
+func handleKeyboardCameraMovement(e *Editor) {
 	var velX float64 = 0
 	var velY float64 = 0
 
