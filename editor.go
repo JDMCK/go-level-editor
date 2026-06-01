@@ -8,12 +8,21 @@ import (
 	eb "github.com/hajimehoshi/ebiten/v2"
 )
 
+const TileSize = 16
+
+var ScreenWidth = 1920
+var ScreenHeight = 1080
+
 type Editor struct {
 	camera *Camera
 	GUI    []gui.Element
 
 	prevCursorX int
 	prevCursorY int
+
+	palette   *Palette
+	layers    []*Container
+	currLayer int
 }
 
 type Drawable interface {
@@ -32,6 +41,11 @@ func NewEditor() *Editor {
 	e.GUI = guiEls
 
 	e.camera = NewCamera()
+	e.camera.CenterScreenOffset(ScreenWidth, ScreenHeight)
+
+	layers := make([]*Container, 0)
+	layers = append(layers, NewEmptyContainer(0, 0, TileSize, TileSize, 25, 25))
+	e.layers = layers
 	return &e
 }
 
@@ -40,14 +54,25 @@ func (e *Editor) Update() error {
 		el.Update()
 	}
 
+	// cursor drag
+	x, y := ebiten.CursorPosition()
 	if ebiten.IsKeyPressed(FreeMoveKey) && ebiten.IsMouseButtonPressed(Primary) {
-		x, y := ebiten.CursorPosition()
-		dx := x - e.prevCursorX
-		dy := y - e.prevCursorY
-		e.camera.focusX += float64(dx)
-		e.camera.focusY += float64(dy)
-		return nil
+		dx := float64(e.prevCursorX - x)
+		dx *= 1 / e.camera.zoom
+		dy := float64(e.prevCursorY - y)
+		dy *= 1 / e.camera.zoom
+		e.camera.focusX += dx
+		e.camera.focusY += dy
 	}
+	e.prevCursorX = x
+	e.prevCursorY = y
+
+	// cursor zoom
+	_, yoff := ebiten.Wheel()
+	e.camera.zoom -= yoff * 0.01
+
+	fmt.Println(e.camera)
+
 	handleKeyboardCameraMovement(e)
 	return nil
 }
@@ -74,11 +99,15 @@ func handleKeyboardCameraMovement(e *Editor) {
 }
 
 func (e *Editor) Draw(screen *eb.Image) {
+	for _, l := range e.layers {
+		l.Draw(screen, e.camera.DrawOptions())
+	}
+
 	for _, el := range e.GUI {
 		el.Draw(screen)
 	}
 }
 
 func (e *Editor) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 800, 800
+	return ScreenWidth, ScreenHeight
 }

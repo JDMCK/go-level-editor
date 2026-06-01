@@ -8,7 +8,8 @@ import (
 
 func main() {
 	editor := NewEditor()
-	eb.SetWindowSize(800, 800)
+	eb.SetWindowSize(ScreenWidth, ScreenHeight)
+	eb.SetWindowResizingMode(eb.WindowResizingModeEnabled)
 	eb.SetWindowTitle("Level Editor")
 
 	if err := eb.RunGame(editor); err != nil {

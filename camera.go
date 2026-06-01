@@ -27,6 +27,11 @@ func NewCamera() *Camera {
 	}
 }
 
+func (c *Camera) CenterScreenOffset(screenWidth, screenHeight int) {
+	c.offsetX = float64(screenWidth) / 2
+	c.offsetY = float64(screenHeight) / 2
+}
+
 func (c *Camera) DrawOptions() *ebiten.DrawImageOptions {
 	op := ebiten.DrawImageOptions{}
 	op.GeoM.Translate(-c.focusX, -c.focusY)

@@ -25,5 +25,5 @@ func TilePositionFromIndex(index int, width int, tileWidth, tileHeight int) (int
 func TileIndexFromPosition(x, y int, width int, tileWidth, tileHeight int) int {
 	sX := x / tileWidth
 	sY := y / tileHeight
-
+	return (sY * width) + sX
 }
