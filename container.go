@@ -52,6 +52,14 @@ func NewContainerFromAtlas(x, y int, atlasPath string, tileCount, rowSize, tileW
 	return &c
 }
 
+func (c *Container) TileFromCursor(cam *Camera) *Tile {
+	cx, cy := CursorPosition(cam)
+	index := TileIndexFromPosition(cx, cy, c.width, c.tileWidth, c.tileHeight)
+	return c.tiles[index]
+}
+
+func (c *Container) Update() {}
+
 func (c *Container) Draw(screen *ebiten.Image, cam *ebiten.DrawImageOptions) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(c.x), float64(c.y))

@@ -21,8 +21,10 @@ type Editor struct {
 	prevCursorY int
 
 	palette   *Palette
-	layers    []*Container
+	canvas    []*Container
 	currLayer int
+
+	cursor *Cursor
 }
 
 type Drawable interface {
@@ -45,7 +47,11 @@ func NewEditor() *Editor {
 
 	layers := make([]*Container, 0)
 	layers = append(layers, NewEmptyContainer(0, 0, TileSize, TileSize, 25, 25))
-	e.layers = layers
+	e.canvas = layers
+
+	cursor := NewCursor(TileSize, TileSize)
+	e.cursor = cursor
+
 	return &e
 }
 
@@ -54,7 +60,7 @@ func (e *Editor) Update() error {
 		el.Update()
 	}
 
-	// cursor drag
+	// mouse drag
 	x, y := ebiten.CursorPosition()
 	if ebiten.IsKeyPressed(FreeMoveKey) && ebiten.IsMouseButtonPressed(Primary) {
 		dx := float64(e.prevCursorX - x)
@@ -67,11 +73,13 @@ func (e *Editor) Update() error {
 	e.prevCursorX = x
 	e.prevCursorY = y
 
-	// cursor zoom
+	// mouse zoom
 	_, yoff := ebiten.Wheel()
-	e.camera.zoom -= yoff * 0.01
+	e.camera.zoom -= yoff * 0.05
 
-	fmt.Println(e.camera)
+	// update cursor
+	curTile := e.canvas[e.currLayer].TileFromCursor(e.camera)
+	e.cursor.SelectTile()
 
 	handleKeyboardCameraMovement(e)
 	return nil
@@ -99,7 +107,7 @@ func handleKeyboardCameraMovement(e *Editor) {
 }
 
 func (e *Editor) Draw(screen *eb.Image) {
-	for _, l := range e.layers {
+	for _, l := range e.canvas {
 		l.Draw(screen, e.camera.DrawOptions())
 	}
 
