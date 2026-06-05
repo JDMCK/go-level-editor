@@ -12,15 +12,6 @@ type Camera struct {
 	zoom    float64
 }
 
-const MoveUpKey = ebiten.KeyW
-const MoveDownKey = ebiten.KeyS
-const MoveLeftKey = ebiten.KeyA
-const MoveRightKey = ebiten.KeyD
-const FreeMoveKey = ebiten.KeySpace
-const Primary = ebiten.MouseButtonLeft
-const Secondary = ebiten.MouseButtonRight
-const MovementSpeed = 10
-
 func NewCamera() *Camera {
 	return &Camera{
 		zoom: 1,
