@@ -18,7 +18,6 @@ type Container struct {
 	tileWidth, tileHeight int
 	x, y                  int
 	tiles                 []*Tile
-	borderImg             *ebiten.Image
 }
 
 func NewEmptyContainer(x, y int, tileWidth, tileHeight int, width, height int) *Container {
@@ -36,7 +35,6 @@ func NewEmptyContainer(x, y int, tileWidth, tileHeight int, width, height int) *
 		x:          x,
 		y:          y,
 		tiles:      tiles,
-		borderImg:  ebiten.NewImage(BorderWidth*2+width*tileWidth, BorderWidth*2+height*tileHeight),
 	}
 }
 
@@ -46,8 +44,6 @@ func NewContainerFromAtlas(x, y int, path string, tileWidth, tileHeight int, wid
 		log.Fatal("Failed to read in tile set.")
 	}
 
-	height := count / width
-
 	c := Container{
 		count:      count,
 		width:      width,
@@ -56,7 +52,6 @@ func NewContainerFromAtlas(x, y int, path string, tileWidth, tileHeight int, wid
 		y:          y,
 		tileWidth:  tileWidth,
 		tileHeight: tileHeight,
-		borderImg:  ebiten.NewImage(BorderWidth*2+width*tileWidth, BorderWidth*2+height*tileHeight),
 	}
 	for i := range count {
 		x, y := TilePositionFromIndex(i, width, tileWidth, tileHeight)
@@ -67,8 +62,8 @@ func NewContainerFromAtlas(x, y int, path string, tileWidth, tileHeight int, wid
 	return &c
 }
 
-func (c *Container) TileFromCursor(cam *Camera) (*Tile, int, int) {
-	cx, cy := CursorPosition(cam)
+func (c *Container) TileFromCursor(op *Camera) (*Tile, int, int) {
+	cx, cy := CursorPosition(op)
 	index := TileIndexFromPosition(cx, cy, c.width, c.count/c.width, c.tileWidth, c.tileHeight)
 	x, y := TilePositionFromIndex(index, c.width, c.tileWidth, c.tileHeight)
 	if index < 0 || index >= c.count {
@@ -89,11 +84,20 @@ func (c *Container) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
 	if op != nil {
 		newOp.GeoM.Concat(op.GeoM)
 	}
-	height := GetHeight(c.width, c.count) * c.tileHeight
-	vector.StrokeRect(c.borderImg, 0, 0, float32(c.width*c.tileWidth), float32(height), BorderWidth, color.White, false)
-	screen.DrawImage(c.borderImg, newOp)
 	for i, t := range c.tiles {
 		x, y := TilePositionFromIndex(i, c.width, c.tileWidth, c.tileHeight)
 		t.Draw(x, y, screen, newOp)
 	}
+
+	w := c.width * c.tileWidth
+	h := GetHeight(c.width, c.count) * c.tileHeight
+
+	x0, y0 := newOp.GeoM.Apply(0, 0)
+	x1, y1 := newOp.GeoM.Apply(float64(w), float64(h))
+
+	vector.StrokeRect(screen,
+		float32(x0), float32(y0),
+		float32(x1-x0), float32(y1-y0),
+		BorderWidth, color.White, false)
+
 }

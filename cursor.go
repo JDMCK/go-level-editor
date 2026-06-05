@@ -50,11 +50,21 @@ func (c *Cursor) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
 		return
 	}
 	c.img.Clear()
-	vector.StrokeRect(c.img, 0, 0, float32(c.width*c.tileWidth), float32(c.height*c.tileHeight), HighlightWidth, color.White, false)
+
 	newOp := ebiten.DrawImageOptions{}
 	newOp.GeoM.Translate(float64(c.x), float64(c.y))
+
 	if op != nil {
 		newOp.GeoM.Concat(op.GeoM)
 	}
-	screen.DrawImage(c.img, &newOp)
+
+	w := c.width * c.tileWidth
+	h := c.height * c.tileHeight
+	x0, y0 := newOp.GeoM.Apply(float64(0), float64(0))
+	x1, y1 := newOp.GeoM.Apply(float64(w), float64(h))
+
+	vector.StrokeRect(screen,
+		float32(x0), float32(y0),
+		float32(x1-x0), float32(y1-y0),
+		HighlightWidth, color.White, false)
 }

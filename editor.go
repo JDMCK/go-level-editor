@@ -48,13 +48,13 @@ func NewEditor() *Editor {
 	e.camera.CenterScreenOffset(ScreenWidth, ScreenHeight)
 
 	layers := make([]*Container, 0)
-	layers = append(layers, NewEmptyContainer(0, 0, TileSize, TileSize, 25, 25))
+	layers = append(layers, NewEmptyContainer(0, 0, TileSize, TileSize, 50, 25))
 	e.canvas = layers
 
 	cursor := NewCursor(TileSize, TileSize)
 	e.cursor = cursor
 
-	p := NewPaletteFromTileMap(50, 50, "assets/dungeon.png", 16, 16, 6, 18)
+	p := NewPaletteFromTileMap(10, 10, "assets/dungeon.png", 16, 16, 6, 18)
 	e.palette = p
 
 	return &e
@@ -77,7 +77,7 @@ func (e *Editor) Update() error {
 		e.cursor.GetTile().img.Clear()
 	}
 
-	// e.palette.Update()
+	e.palette.Update()
 
 	return nil
 }
