@@ -27,8 +27,10 @@ func (p *Palette) Update() {
 	// update cursor (draw / erase)
 	op := ebiten.DrawImageOptions{}
 	op.GeoM.Scale(PaletteScale, PaletteScale)
-	// curTile, x, y := p.container.TileFromCursor(op)
-	// p.cursor.SelectTile(x, y, curTile)
+
+	curTile, x, y := p.container.TileFromCursor(&op)
+	p.cursor.SelectTile(x, y, curTile)
+
 	if p.cursor.tile != nil && ebiten.IsMouseButtonPressed(Primary) {
 		p.cursor.GetTile().img.Fill(color.RGBA{255, 255, 0, 255})
 	}

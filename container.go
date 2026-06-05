@@ -62,7 +62,7 @@ func NewContainerFromAtlas(x, y int, path string, tileWidth, tileHeight int, wid
 	return &c
 }
 
-func (c *Container) TileFromCursor(op *Camera) (*Tile, int, int) {
+func (c *Container) TileFromCursor(op *ebiten.DrawImageOptions) (*Tile, int, int) {
 	cx, cy := CursorPosition(op)
 	index := TileIndexFromPosition(cx, cy, c.width, c.count/c.width, c.tileWidth, c.tileHeight)
 	x, y := TilePositionFromIndex(index, c.width, c.tileWidth, c.tileHeight)

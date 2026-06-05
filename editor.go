@@ -68,7 +68,7 @@ func (e *Editor) Update() error {
 	e.ic.Update(e)
 
 	// update cursor (draw / erase)
-	curTile, x, y := e.canvas[e.currLayer].TileFromCursor(e.camera)
+	curTile, x, y := e.canvas[e.currLayer].TileFromCursor(e.camera.DrawOptions())
 	e.cursor.SelectTile(x, y, curTile)
 	if e.cursor.tile != nil && ebiten.IsMouseButtonPressed(Primary) && e.ic.mode == Editing {
 		e.cursor.GetTile().img.Fill(color.RGBA{255, 255, 0, 255})
