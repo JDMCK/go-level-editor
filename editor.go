@@ -1,7 +1,6 @@
 package main
 
 import (
-	"image/color"
 	gui "level-editor/gui"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -48,7 +47,7 @@ func NewEditor() *Editor {
 	e.camera.CenterScreenOffset(ScreenWidth, ScreenHeight)
 
 	layers := make([]*Container, 0)
-	layers = append(layers, NewEmptyContainer(0, 0, TileSize, TileSize, 50, 25))
+	layers = append(layers, NewEmptyContainer(0, 0, TileSize, TileSize, 20, 20))
 	e.canvas = layers
 
 	cursor := NewCursor(TileSize, TileSize)
@@ -68,10 +67,11 @@ func (e *Editor) Update() error {
 	e.ic.Update(e)
 
 	// update cursor (draw / erase)
-	curTile, x, y := e.canvas[e.currLayer].TileFromCursor(e.camera.DrawOptions())
-	e.cursor.SelectTile(x, y, curTile)
+	curTile := e.canvas[e.currLayer].TileFromCursor(e.camera.DrawOptions())
+	e.cursor.SelectTile(curTile)
 	if e.cursor.tile != nil && ebiten.IsMouseButtonPressed(Primary) && e.ic.mode == Editing {
-		e.cursor.GetTile().img.Fill(color.RGBA{255, 255, 0, 255})
+		tile := e.palette.SelectedTile()
+		e.cursor.tile.img = tile.img
 	}
 	if e.cursor.tile != nil && ebiten.IsMouseButtonPressed(Secondary) && e.ic.mode == Editing {
 		e.cursor.GetTile().img.Clear()
@@ -86,11 +86,11 @@ func (e *Editor) Draw(screen *eb.Image) {
 	for _, l := range e.canvas {
 		l.Draw(screen, e.camera.DrawOptions())
 	}
+	e.cursor.Draw(screen, e.camera.DrawOptions())
 
 	for _, el := range e.GUI {
 		el.Draw(screen)
 	}
-	e.cursor.Draw(screen, e.camera.DrawOptions())
 
 	e.palette.Draw(screen)
 }

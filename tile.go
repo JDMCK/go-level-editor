@@ -5,20 +5,21 @@ import (
 )
 
 type Tile struct {
-	img *ebiten.Image
+	x, y int
+	img  *ebiten.Image
 }
 
-func NewTile(img *ebiten.Image) *Tile {
-	return &Tile{img: img}
+func NewTile(x, y int, img *ebiten.Image) *Tile {
+	return &Tile{x, y, img}
 }
 
-func NewEmptyTile(tileWidth, tileHeight int) *Tile {
-	return &Tile{img: ebiten.NewImage(tileWidth, tileHeight)}
+func NewEmptyTile(x, y int, tileWidth, tileHeight int) *Tile {
+	return &Tile{x: x, y: y, img: ebiten.NewImage(tileWidth, tileHeight)}
 }
 
-func (t *Tile) Draw(x, y int, screen *ebiten.Image, cam *ebiten.DrawImageOptions) {
+func (t *Tile) Draw(screen *ebiten.Image, cam *ebiten.DrawImageOptions) {
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(float64(x), float64(y))
+	op.GeoM.Translate(float64(t.x), float64(t.y))
 	op.GeoM.Concat(cam.GeoM)
 	screen.DrawImage(t.img, op)
 }

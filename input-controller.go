@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -82,21 +80,22 @@ func handleKeyboardCameraMovement(e *Editor) (float64, float64) {
 
 func CursorPosition(op *ebiten.DrawImageOptions) (int, int) {
 	mx, my := ebiten.CursorPosition()
-	// x := float64(mx) - cam.offsetX
-	// y := float64(my) - cam.offsetY
-
-	// x /= cam.zoom
-	// y /= cam.zoom
-
-	// x += cam.focusX
-	// y += cam.focusY
-
+	op.GeoM.Invert()
 	x, y := op.GeoM.Apply(float64(mx), float64(my))
 
-	fmt.Println(mx, my, x, y)
+	return int(x), int(y)
+}
 
-	// 4, 6 -> 964, 546
-	// 4, 6 -> 16, 24
+func CursorCamPosition(cam *Camera) (int, int) {
+	mx, my := ebiten.CursorPosition()
+	x := float64(mx) - cam.offsetX
+	y := float64(my) - cam.offsetY
+
+	x /= cam.zoom
+	y /= cam.zoom
+
+	x += cam.focusX
+	y += cam.focusY
 
 	return int(x), int(y)
 }

@@ -9,7 +9,6 @@ import (
 
 // highlights tiles
 type Cursor struct {
-	x, y                  int
 	width, height         int
 	tileWidth, tileHeight int
 	tile                  *Tile
@@ -29,15 +28,13 @@ func NewCursor(tileWidth, tileHeight int) *Cursor {
 	}
 }
 
-func (c *Cursor) SelectTile(x, y int, tile *Tile) {
+func (c *Cursor) SelectTile(tile *Tile) {
 	if tile == nil {
 		c.enabled = false
 		c.tile = tile
 		return
 	}
 	c.enabled = true
-	c.x = x
-	c.y = y
 	c.tile = tile
 }
 
@@ -52,15 +49,12 @@ func (c *Cursor) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
 	c.img.Clear()
 
 	newOp := ebiten.DrawImageOptions{}
-	newOp.GeoM.Translate(float64(c.x), float64(c.y))
-
-	if op != nil {
-		newOp.GeoM.Concat(op.GeoM)
-	}
+	newOp.GeoM.Translate(float64(c.tile.x), float64(c.tile.y))
+	newOp.GeoM.Concat(op.GeoM)
 
 	w := c.width * c.tileWidth
 	h := c.height * c.tileHeight
-	x0, y0 := newOp.GeoM.Apply(float64(0), float64(0))
+	x0, y0 := newOp.GeoM.Apply(0, 0)
 	x1, y1 := newOp.GeoM.Apply(float64(w), float64(h))
 
 	vector.StrokeRect(screen,

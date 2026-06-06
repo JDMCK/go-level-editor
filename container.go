@@ -23,8 +23,9 @@ type Container struct {
 func NewEmptyContainer(x, y int, tileWidth, tileHeight int, width, height int) *Container {
 
 	tiles := make([]*Tile, 0, width*height)
-	for range width * height {
-		tiles = append(tiles, NewEmptyTile(tileWidth, tileHeight))
+	for i := range width * height {
+		x, y := TilePositionFromIndex(i, width, tileWidth, tileHeight)
+		tiles = append(tiles, NewEmptyTile(x, y, tileWidth, tileHeight))
 	}
 
 	return &Container{
@@ -54,22 +55,25 @@ func NewContainerFromAtlas(x, y int, path string, tileWidth, tileHeight int, wid
 		tileHeight: tileHeight,
 	}
 	for i := range count {
-		x, y := TilePositionFromIndex(i, width, tileWidth, tileHeight)
-		rect := image.Rect(x, y, x+tileWidth, y+tileHeight)
-		c.tiles = append(c.tiles, NewTile(img.SubImage(rect).(*ebiten.Image)))
+		rx, ry := TilePositionFromIndex(i, width, tileWidth, tileHeight)
+		rect := image.Rect(rx, ry, rx+tileWidth, ry+tileHeight)
+		c.tiles = append(c.tiles, NewTile(rx+x, ry+y, img.SubImage(rect).(*ebiten.Image)))
 	}
 
 	return &c
 }
 
-func (c *Container) TileFromCursor(op *ebiten.DrawImageOptions) (*Tile, int, int) {
-	cx, cy := CursorPosition(op)
+func (c *Container) TileFromCursor(op *ebiten.DrawImageOptions) *Tile {
+	newOp := ebiten.DrawImageOptions{}
+	newOp.GeoM.Translate(float64(c.x), float64(c.y))
+	newOp.GeoM.Concat(op.GeoM)
+	cx, cy := CursorPosition(&newOp)
 	index := TileIndexFromPosition(cx, cy, c.width, c.count/c.width, c.tileWidth, c.tileHeight)
-	x, y := TilePositionFromIndex(index, c.width, c.tileWidth, c.tileHeight)
 	if index < 0 || index >= c.count {
-		return nil, 0, 0
+		return nil
 	}
-	return c.tiles[index], x, y
+	tile := c.tiles[index]
+	return tile
 }
 
 func GetHeight(width, count int) int {
@@ -79,19 +83,16 @@ func GetHeight(width, count int) int {
 func (c *Container) Update() {}
 
 func (c *Container) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
-	newOp := &ebiten.DrawImageOptions{}
+	newOp := ebiten.DrawImageOptions{}
 	newOp.GeoM.Translate(float64(c.x), float64(c.y))
-	if op != nil {
-		newOp.GeoM.Concat(op.GeoM)
-	}
-	for i, t := range c.tiles {
-		x, y := TilePositionFromIndex(i, c.width, c.tileWidth, c.tileHeight)
-		t.Draw(x, y, screen, newOp)
+	newOp.GeoM.Concat(op.GeoM)
+
+	for _, t := range c.tiles {
+		t.Draw(screen, op)
 	}
 
 	w := c.width * c.tileWidth
 	h := GetHeight(c.width, c.count) * c.tileHeight
-
 	x0, y0 := newOp.GeoM.Apply(0, 0)
 	x1, y1 := newOp.GeoM.Apply(float64(w), float64(h))
 
@@ -99,5 +100,4 @@ func (c *Container) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
 		float32(x0), float32(y0),
 		float32(x1-x0), float32(y1-y0),
 		BorderWidth, color.White, false)
-
 }
