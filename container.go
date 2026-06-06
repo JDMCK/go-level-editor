@@ -76,6 +76,23 @@ func (c *Container) TileFromCursor(op *ebiten.DrawImageOptions) *Tile {
 	return tile
 }
 
+func (c *Container) TileFromPosition(x, y int, op *ebiten.DrawImageOptions) *Tile {
+	newOp := ebiten.DrawImageOptions{}
+	newOp.GeoM.Translate(float64(c.x), float64(c.y))
+	newOp.GeoM.Concat(op.GeoM)
+
+	// Invert so Apply maps screen-space back into local tile space.
+	newOp.GeoM.Invert()
+	tx, ty := newOp.GeoM.Apply(float64(x), float64(y))
+
+	index := TileIndexFromPosition(int(tx), int(ty), c.width, c.count/c.width, c.tileWidth, c.tileHeight)
+	if index < 0 || index >= c.count {
+		return nil
+	}
+	tile := c.tiles[index]
+	return tile
+}
+
 func GetHeight(width, count int) int {
 	return count / width
 }

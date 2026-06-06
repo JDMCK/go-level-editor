@@ -32,7 +32,7 @@ func (p *Palette) Update() {
 	p.hoverCursor.SelectTile(curTile)
 
 	if p.hoverCursor.tile != nil && ebiten.IsMouseButtonPressed(Primary) {
-		tile := p.hoverCursor.GetTile()
+		tile := p.hoverCursor.tile
 		p.selectionCursor.SelectTile(tile)
 	}
 }

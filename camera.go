@@ -12,9 +12,9 @@ type Camera struct {
 	zoom    float64
 }
 
-func NewCamera() *Camera {
+func NewCamera(zoom float64) *Camera {
 	return &Camera{
-		zoom: 1,
+		zoom: zoom,
 	}
 }
 

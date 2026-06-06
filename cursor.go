@@ -36,14 +36,24 @@ func (c *Cursor) SelectTile(tile *Tile) {
 	}
 	c.enabled = true
 	c.tile = tile
+	c.width = 1
+	c.height = 1
 }
 
-func (c *Cursor) GetTile() *Tile {
-	return c.tile
+func (c *Cursor) MultiSelect(tile *Tile, width, height int) {
+	if tile == nil {
+		c.enabled = false
+		c.tile = tile
+		return
+	}
+	c.enabled = true
+	c.tile = tile
+	c.width = width
+	c.height = height
 }
 
 func (c *Cursor) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
-	if c.enabled == false {
+	if c.enabled == false || c.tile == nil {
 		return
 	}
 	c.img.Clear()

@@ -8,6 +8,7 @@ type InputMode int
 
 const (
 	Editing InputMode = iota
+	BlockEdit
 	Moving
 )
 
@@ -22,6 +23,7 @@ const MoveRightKey = ebiten.KeyD
 const FreeMoveKey = ebiten.KeySpace
 const Primary = ebiten.MouseButtonLeft
 const Secondary = ebiten.MouseButtonRight
+const MultiSelect = ebiten.KeyControl
 const MovementSpeed = 10
 
 func (i *InputController) Update(e *Editor) {
@@ -31,9 +33,12 @@ func (i *InputController) Update(e *Editor) {
 
 	dx, dy := kdx+mdx, kdy+mdy
 
-	if dx > 0 || dy > 0 || ebiten.IsKeyPressed(FreeMoveKey) {
+	switch {
+	case dx > 0 || dy > 0 || ebiten.IsKeyPressed(FreeMoveKey):
 		e.ic.mode = Moving
-	} else {
+	case ebiten.IsKeyPressed(MultiSelect):
+		e.ic.mode = BlockEdit
+	default:
 		e.ic.mode = Editing
 	}
 

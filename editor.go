@@ -1,13 +1,17 @@
 package main
 
 import (
+	"fmt"
 	gui "level-editor/gui"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	eb "github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const TileSize = 16
+const CanvasWidth = 25
+const CanvasHeight = 25
 
 var ScreenWidth = 1920
 var ScreenHeight = 1080
@@ -19,12 +23,13 @@ type Editor struct {
 	prevCursorX int
 	prevCursorY int
 
+	multiStartTile *Tile
+
 	palette   *Palette
 	canvas    []*Container
 	currLayer int
 
-	ic InputController
-
+	ic     InputController
 	cursor *Cursor
 }
 
@@ -43,11 +48,13 @@ func NewEditor() *Editor {
 	// guiEls = append(guiEls, gui.NewCheckbox(50, 250))
 	// e.GUI = guiEls
 
-	e.camera = NewCamera()
+	e.camera = NewCamera(3)
 	e.camera.CenterScreenOffset(ScreenWidth, ScreenHeight)
+	e.camera.focusX += CanvasWidth * TileSize / 2
+	e.camera.focusY += CanvasHeight * TileSize / 2
 
 	layers := make([]*Container, 0)
-	layers = append(layers, NewEmptyContainer(0, 0, TileSize, TileSize, 20, 20))
+	layers = append(layers, NewEmptyContainer(0, 0, TileSize, TileSize, CanvasWidth, CanvasHeight))
 	e.canvas = layers
 
 	cursor := NewCursor(TileSize, TileSize)
@@ -63,21 +70,51 @@ func (e *Editor) Update() error {
 	for _, el := range e.GUI {
 		el.Update()
 	}
-
 	e.ic.Update(e)
-
-	// update cursor (draw / erase)
-	curTile := e.canvas[e.currLayer].TileFromCursor(e.camera.DrawOptions())
-	e.cursor.SelectTile(curTile)
-	if e.cursor.tile != nil && ebiten.IsMouseButtonPressed(Primary) && e.ic.mode == Editing {
-		tile := e.palette.SelectedTile()
-		e.cursor.tile.img = tile.img
-	}
-	if e.cursor.tile != nil && ebiten.IsMouseButtonPressed(Secondary) && e.ic.mode == Editing {
-		e.cursor.GetTile().img.Clear()
-	}
-
 	e.palette.Update()
+
+	camOp := e.camera.DrawOptions()
+
+	curTile := e.canvas[e.currLayer].TileFromCursor(camOp)
+	e.cursor.SelectTile(curTile)
+
+	// draw / erase
+	if e.cursor.tile == nil {
+		return nil
+	}
+	if ebiten.IsMouseButtonPressed(Primary) && e.ic.mode == Editing {
+		tile := e.palette.SelectedTile()
+		if tile != nil {
+			e.cursor.tile.img = tile.img
+		}
+	}
+	if ebiten.IsMouseButtonPressed(Secondary) && e.ic.mode == Editing {
+		e.cursor.tile.Reset()
+	}
+	// block draw / erase
+	if inpututil.IsMouseButtonJustPressed(Primary) && e.ic.mode == BlockEdit {
+		e.multiStartTile = curTile
+	}
+	if e.ic.mode != BlockEdit {
+		e.multiStartTile = nil
+	}
+	if e.ic.mode == BlockEdit && e.multiStartTile == nil {
+		e.cursor.SelectTile(curTile)
+	}
+	if e.multiStartTile != nil && e.ic.mode == BlockEdit {
+		midX := curTile.x
+		midY := curTile.y
+
+		topRightX := min(e.multiStartTile.x, midX)
+		topRightY := max(e.multiStartTile.y, midY)
+
+		botRightX := max(e.multiStartTile.x, midX)
+		botLeftY := max(e.multiStartTile.y, midY)
+
+		topRightTile := e.canvas[e.currLayer].TileFromPosition(topRightX, topRightY, camOp)
+		fmt.Println(topRightTile)
+		e.cursor.MultiSelect(topRightTile, botRightX, botLeftY)
+	}
 
 	return nil
 }
