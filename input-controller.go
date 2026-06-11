@@ -34,7 +34,7 @@ func (i *InputController) Update(e *Editor) {
 	dx, dy := kdx+mdx, kdy+mdy
 
 	switch {
-	case dx > 0 || dy > 0 || ebiten.IsKeyPressed(FreeMoveKey):
+	case dx != 0 || dy != 0 || ebiten.IsKeyPressed(FreeMoveKey):
 		e.ic.mode = Moving
 	case ebiten.IsKeyPressed(MultiSelect):
 		e.ic.mode = BlockEdit
@@ -87,20 +87,6 @@ func CursorPosition(op *ebiten.DrawImageOptions) (int, int) {
 	mx, my := ebiten.CursorPosition()
 	op.GeoM.Invert()
 	x, y := op.GeoM.Apply(float64(mx), float64(my))
-
-	return int(x), int(y)
-}
-
-func CursorCamPosition(cam *Camera) (int, int) {
-	mx, my := ebiten.CursorPosition()
-	x := float64(mx) - cam.offsetX
-	y := float64(my) - cam.offsetY
-
-	x /= cam.zoom
-	y /= cam.zoom
-
-	x += cam.focusX
-	y += cam.focusY
 
 	return int(x), int(y)
 }

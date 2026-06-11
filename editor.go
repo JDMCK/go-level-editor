@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
 	gui "level-editor/gui"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	eb "github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const TileSize = 16
@@ -34,7 +31,7 @@ type Editor struct {
 }
 
 type Drawable interface {
-	Draw(dst *ebiten.Image)
+	Draw(dst *eb.Image)
 }
 
 func NewEditor() *Editor {
@@ -73,50 +70,59 @@ func (e *Editor) Update() error {
 	e.ic.Update(e)
 	e.palette.Update()
 
-	camOp := e.camera.DrawOptions()
-
-	curTile := e.canvas[e.currLayer].TileFromCursor(camOp)
-	e.cursor.SelectTile(curTile)
-
 	// draw / erase
-	if e.cursor.tile == nil {
-		return nil
+	switch e.ic.mode {
+	case Editing:
+		handleEditMode(e)
+	case BlockEdit:
+		handleBlockEditMode(e)
+	case Moving:
+		handleMovingMode(e)
 	}
-	if ebiten.IsMouseButtonPressed(Primary) && e.ic.mode == Editing {
+
+	return nil
+}
+
+func handleEditMode(e *Editor) {
+	if eb.IsMouseButtonPressed(Primary) {
 		tile := e.palette.SelectedTile()
 		if tile != nil {
 			e.cursor.tile.img = tile.img
 		}
 	}
-	if ebiten.IsMouseButtonPressed(Secondary) && e.ic.mode == Editing {
+	if eb.IsMouseButtonPressed(Secondary) {
 		e.cursor.tile.Reset()
 	}
-	// block draw / erase
-	if inpututil.IsMouseButtonJustPressed(Primary) && e.ic.mode == BlockEdit {
-		e.multiStartTile = curTile
-	}
-	if e.ic.mode != BlockEdit {
-		e.multiStartTile = nil
-	}
-	if e.ic.mode == BlockEdit && e.multiStartTile == nil {
-		e.cursor.SelectTile(curTile)
-	}
-	if e.multiStartTile != nil && e.ic.mode == BlockEdit {
-		midX := curTile.x
-		midY := curTile.y
+}
+func handleBlockEditMode(e *Editor) {
+	// camOp := e.camera.DrawOptions()
+	// curTile := e.canvas[e.currLayer].TileFromCursor(camOp)
+	// if e.cursor.tile == nil {
+	// 	return
+	// }
+	// if inpututil.IsMouseButtonJustPressed(Primary) && e.ic.mode == BlockEdit {
+	// 	e.multiStartTile = curTile
+	// }
+	// if e.ic.mode == BlockEdit && e.multiStartTile == nil {
+	// 	e.cursor.SelectTile(curTile)
+	// }
+	// if e.multiStartTile != nil && e.ic.mode == BlockEdit {
+	// 	midX := curTile.x
+	// 	midY := curTile.y
 
-		topRightX := min(e.multiStartTile.x, midX)
-		topRightY := max(e.multiStartTile.y, midY)
+	// 	topRightX := min(e.multiStartTile.x, midX)
+	// 	topRightY := max(e.multiStartTile.y, midY)
 
-		botRightX := max(e.multiStartTile.x, midX)
-		botLeftY := max(e.multiStartTile.y, midY)
+	// 	botRightX := max(e.multiStartTile.x, midX)
+	// 	botLeftY := max(e.multiStartTile.y, midY)
 
-		topRightTile := e.canvas[e.currLayer].TileFromPosition(topRightX, topRightY, camOp)
-		fmt.Println(topRightTile)
-		e.cursor.MultiSelect(topRightTile, botRightX, botLeftY)
-	}
+	// 	topRightTile := e.canvas[e.currLayer].TileFromPosition(topRightX, topRightY, camOp)
+	// 	fmt.Println(topRightTile)
+	// 	e.cursor.MultiSelect(topRightTile, botRightX, botLeftY)
+	// }
+}
+func handleMovingMode(e *Editor) {
 
-	return nil
 }
 
 func (e *Editor) Draw(screen *eb.Image) {
