@@ -11,7 +11,7 @@ import (
 type Cursor struct {
 	width, height         int
 	tileWidth, tileHeight int
-	tile                  *Tile
+	Tile                  *Tile
 	enabled               bool
 	img                   *ebiten.Image
 }
@@ -31,35 +31,27 @@ func NewCursor(tileWidth, tileHeight int) *Cursor {
 func (c *Cursor) SelectTile(tile *Tile) {
 	if tile == nil {
 		c.enabled = false
-		c.tile = tile
+		c.Tile = tile
 		return
 	}
 	c.enabled = true
-	c.tile = tile
+	c.Tile = tile
 	c.width = 1
 	c.height = 1
 }
 
-func (c *Cursor) MultiSelect(tile *Tile, width, height int) {
-	if tile == nil {
-		c.enabled = false
-		c.tile = tile
-		return
-	}
-	c.enabled = true
-	c.tile = tile
-	c.width = width
-	c.height = height
+func (c *Cursor) Update() {
+
 }
 
 func (c *Cursor) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
-	if c.enabled == false || c.tile == nil {
+	if c.enabled == false || c.Tile == nil {
 		return
 	}
 	c.img.Clear()
 
 	newOp := ebiten.DrawImageOptions{}
-	newOp.GeoM.Translate(float64(c.tile.x), float64(c.tile.y))
+	newOp.GeoM.Translate(float64(c.Tile.x), float64(c.Tile.y))
 	newOp.GeoM.Concat(op.GeoM)
 
 	w := c.width * c.tileWidth

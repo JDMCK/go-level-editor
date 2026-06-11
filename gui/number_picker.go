@@ -10,36 +10,50 @@ import (
 type NumberPicker struct {
 	x, y     int
 	value    int
-	buttons  [4]*Button
+	buttons  [2]*Button
 	valueImg *ebiten.Image
 	rect     Rectangle
 	text     Text
+	minValue int
+	maxValue int
+	label    Text
 }
 
 const defaultNPButtonSize = 18
 
 var defaultNPButtonColor = color.Gray{100}
+var defaultNPLabelColor = color.White
+var defaultNPLabelSize = 16.0
 
-func newNumberPickerButton(jump int, x, y int, onClick func()) *Button {
-	label := strconv.Itoa(jump)
+func newNumberPickerButton(label string, x, y int, onClick func()) *Button {
 	return NewButton(label, defaultNPButtonSize, defaultNPButtonSize, x, y, 16, defaultNPButtonColor, onClick)
 }
 
-func NewNumberPicker(smallJump, bigJump int, initialValue int, x, y int) *NumberPicker {
+func NewNumberPicker(label string, initialValue, minValue, maxValue int, x, y int, onChange func(int)) *NumberPicker {
+	labelTxt := NewText(label, x, y, defaultNPLabelSize, defaultNPButtonColor)
 	np := NumberPicker{
 		value: initialValue,
 		x:     x,
 		y:     y,
+		label: labelTxt,
 	}
-	btns := [4]*Button{
-		newNumberPickerButton(-bigJump, x, y, func() { np.value -= bigJump }),
-		newNumberPickerButton(-smallJump, x+defaultNPButtonSize, y, func() { np.value -= smallJump }),
-		newNumberPickerButton(smallJump, x+(4*defaultNPButtonSize), y, func() { np.value += smallJump }),
-		newNumberPickerButton(bigJump, x+(5*defaultNPButtonSize), y, func() { np.value += bigJump }),
+	btns := [2]*Button{
+		newNumberPickerButton("-", x, y+labelTxt.rect.height, func() {
+			if np.value-1 >= minValue {
+				np.value -= 1
+			}
+			onChange(np.value)
+		}),
+		newNumberPickerButton("+", x+(3*defaultNPButtonSize), y+labelTxt.rect.height, func() {
+			if np.value+1 <= maxValue {
+				np.value += 1
+			}
+			onChange(np.value)
+		}),
 	}
 	np.buttons = btns
-	np.rect = Rectangle{x, y, defaultNPButtonSize * 6, defaultNPButtonSize}
-	text := NewText(strconv.Itoa(np.value), np.x, np.y, 16, defaultNPButtonColor)
+	np.rect = Rectangle{x, y + labelTxt.rect.height, defaultNPButtonSize * 4, defaultNPButtonSize}
+	text := NewText(strconv.Itoa(np.value), np.x, np.y, defaultNPLabelSize, defaultNPButtonColor)
 	text.CenterInRectangle(np.rect)
 	np.text = text
 	return &np
@@ -54,6 +68,7 @@ func (n *NumberPicker) Update() {
 }
 
 func (n *NumberPicker) Draw(screen *ebiten.Image) {
+	n.label.Draw(screen)
 	for _, btn := range n.buttons {
 		btn.Draw(screen)
 	}

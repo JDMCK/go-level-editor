@@ -31,14 +31,14 @@ func (p *Palette) Update() {
 	curTile := p.container.TileFromCursor(&op)
 	p.hoverCursor.SelectTile(curTile)
 
-	if p.hoverCursor.tile != nil && ebiten.IsMouseButtonPressed(Primary) {
-		tile := p.hoverCursor.tile
+	if p.hoverCursor.Tile != nil && ebiten.IsMouseButtonPressed(Primary) {
+		tile := p.hoverCursor.Tile
 		p.selectionCursor.SelectTile(tile)
 	}
 }
 
 func (p *Palette) SelectedTile() *Tile {
-	return p.selectionCursor.tile
+	return p.selectionCursor.Tile
 }
 
 func (p *Palette) Draw(screen *ebiten.Image) {

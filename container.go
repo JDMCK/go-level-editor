@@ -21,7 +21,6 @@ type Container struct {
 }
 
 func NewEmptyContainer(x, y int, tileWidth, tileHeight int, width, height int) *Container {
-
 	tiles := make([]*Tile, 0, width*height)
 	for i := range width * height {
 		x, y := TilePositionFromIndex(i, width, tileWidth, tileHeight)
@@ -57,17 +56,17 @@ func NewContainerFromAtlas(x, y int, path string, tileWidth, tileHeight int, wid
 	for i := range count {
 		rx, ry := TilePositionFromIndex(i, width, tileWidth, tileHeight)
 		rect := image.Rect(rx, ry, rx+tileWidth, ry+tileHeight)
-		c.tiles = append(c.tiles, NewTile(rx+x, ry+y, img.SubImage(rect).(*ebiten.Image)))
+		img := img.SubImage(rect).(*ebiten.Image)
+		c.tiles = append(c.tiles, NewTile(rx+x, ry+y, img, i))
 	}
 
 	return &c
 }
 
 func (c *Container) TileFromCursor(op *ebiten.DrawImageOptions) *Tile {
-	newOp := ebiten.DrawImageOptions{}
-	newOp.GeoM.Translate(float64(c.x), float64(c.y))
+	newOp := c.worldOp()
 	newOp.GeoM.Concat(op.GeoM)
-	cx, cy := CursorPosition(&newOp)
+	cx, cy := CursorPosition(newOp)
 	index := TileIndexFromPosition(cx, cy, c.width, c.count/c.width, c.tileWidth, c.tileHeight)
 	if index < 0 || index >= c.count {
 		return nil
@@ -77,8 +76,7 @@ func (c *Container) TileFromCursor(op *ebiten.DrawImageOptions) *Tile {
 }
 
 func (c *Container) TileFromPosition(x, y int, op *ebiten.DrawImageOptions) *Tile {
-	newOp := ebiten.DrawImageOptions{}
-	newOp.GeoM.Translate(float64(c.x), float64(c.y))
+	newOp := c.worldOp()
 	newOp.GeoM.Concat(op.GeoM)
 
 	// Invert so Apply maps screen-space back into local tile space.
@@ -97,11 +95,22 @@ func GetHeight(width, count int) int {
 	return count / width
 }
 
+func (c *Container) worldOp() *ebiten.DrawImageOptions {
+	worldOp := ebiten.DrawImageOptions{}
+	worldOp.GeoM.Translate(float64(c.x), float64(c.y))
+	return &worldOp
+}
+
+func (c *Container) Clear() {
+	for _, t := range c.tiles {
+		t.Reset()
+	}
+}
+
 func (c *Container) Update() {}
 
 func (c *Container) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
-	newOp := ebiten.DrawImageOptions{}
-	newOp.GeoM.Translate(float64(c.x), float64(c.y))
+	newOp := c.worldOp()
 	newOp.GeoM.Concat(op.GeoM)
 
 	for _, t := range c.tiles {

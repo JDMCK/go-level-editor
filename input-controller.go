@@ -13,7 +13,7 @@ const (
 )
 
 type InputController struct {
-	mode InputMode
+	Mode InputMode
 }
 
 const MoveUpKey = ebiten.KeyW
@@ -23,31 +23,27 @@ const MoveRightKey = ebiten.KeyD
 const FreeMoveKey = ebiten.KeySpace
 const Primary = ebiten.MouseButtonLeft
 const Secondary = ebiten.MouseButtonRight
-const MultiSelect = ebiten.KeyControl
+const MultiSelect = ebiten.KeyControl // TODO
 const MovementSpeed = 10
+const ZoomSpeed = 0.1
 
 func (i *InputController) Update(e *Editor) {
-
-	kdx, kdy := handleKeyboardCameraMovement(e)
-	mdx, mdy := handleMouseMovement(e)
-
-	dx, dy := kdx+mdx, kdy+mdy
-
 	switch {
-	case dx != 0 || dy != 0 || ebiten.IsKeyPressed(FreeMoveKey):
-		e.ic.mode = Moving
+	case isMovementMode():
+		e.ic.Mode = Moving
 	case ebiten.IsKeyPressed(MultiSelect):
-		e.ic.mode = BlockEdit
+		e.ic.Mode = BlockEdit
 	default:
-		e.ic.mode = Editing
+		e.ic.Mode = Editing
 	}
+}
 
-	e.camera.focusX += dx
-	e.camera.focusY += dy
-
-	// mouse zoom
-	_, yoff := ebiten.Wheel()
-	e.camera.zoom -= yoff * 0.05
+func isMovementMode() bool {
+	return ebiten.IsKeyPressed(FreeMoveKey) ||
+		ebiten.IsKeyPressed(MoveUpKey) ||
+		ebiten.IsKeyPressed(MoveDownKey) ||
+		ebiten.IsKeyPressed(MoveLeftKey) ||
+		ebiten.IsKeyPressed(MoveRightKey)
 }
 
 func handleMouseMovement(e *Editor) (float64, float64) { // mouse drag
