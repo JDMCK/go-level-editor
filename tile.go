@@ -18,20 +18,6 @@ func NewEmptyTile(x, y int) *Tile {
 	return &Tile{x: x, y: y, img: ebiten.NewImage(TileWidth, TileHeight), AtlasIndex: -1}
 }
 
-func TileIndexFromPosition(x, y int, width, height int) int {
-	if x < 0 || y < 0 {
-		return -1
-	}
-	sX := x / TileWidth
-	sY := y / TileHeight
-
-	if sX >= width || sY >= height {
-		return -1
-	}
-
-	return (sY * width) + sX
-}
-
 func (t *Tile) SetImg(img *ebiten.Image, atlasIndex int) {
 	t.img = img
 	t.AtlasIndex = atlasIndex

@@ -112,19 +112,14 @@ func handleEditMode(e *Editor) {
 	camOp := e.camera.DrawOptions()
 	curTile := e.canvas[e.currLayer].TileFromCursor(camOp)
 	e.cursor.SelectTile(curTile)
+
 	if e.cursor.Tile == nil {
 		return
 	}
-	if eb.IsMouseButtonPressed(Primary) {
-		tile := e.palette.SelectedTile()
-		if tile != nil && curTile != nil {
-			curTile.SetImg(tile.img, tile.AtlasIndex)
-		}
-	}
-	if eb.IsMouseButtonPressed(Secondary) {
-		e.cursor.Tile.Reset()
-	}
+
+	handleEdits(e, curTile)
 }
+
 func handleBlockEditMode(e *Editor) {
 	// TODO
 }

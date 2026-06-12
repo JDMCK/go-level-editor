@@ -22,7 +22,7 @@ type Container struct {
 func NewEmptyContainer(x, y int, width, height int) *Container {
 	tiles := make([]*Tile, 0, width*height)
 	for i := range width * height {
-		x, y := tilePositionFromIndex(i, width)
+		x, y := TilePositionFromIndex(i, width)
 		tiles = append(tiles, NewEmptyTile(x, y))
 	}
 	return &Container{
@@ -53,7 +53,7 @@ func NewContainerFromAtlas(x, y int, path string) *Container {
 	}
 
 	for i := range width * height { // loop through width * height to fill out a full rectangle
-		rx, ry := tilePositionFromIndex(i, width)
+		rx, ry := TilePositionFromIndex(i, width)
 		rect := image.Rect(rx, ry, rx+TileWidth, ry+TileHeight)
 		img := img.SubImage(rect).(*ebiten.Image)
 		c.tiles = append(c.tiles, NewTile(rx+x, ry+y, img, i))
@@ -75,8 +75,40 @@ func (c *Container) TileFromCursor(op *ebiten.DrawImageOptions) *Tile {
 	return tile
 }
 
-func tilePositionFromIndex(index int, width int) (int, int) {
+func TilePositionFromIndex(index int, width int) (int, int) {
 	return (index % width) * TileWidth, (index / width) * TileHeight
+}
+
+func TileIndexFromPosition(x, y int, width, height int) int {
+	if x < 0 || y < 0 {
+		return -1
+	}
+	sX := x / TileWidth
+	sY := y / TileHeight
+
+	if sX >= width || sY >= height {
+		return -1
+	}
+
+	return (sY * width) + sX
+}
+
+func TileIndexFromCoords(width int, row, col int) int {
+	return row*width + col
+}
+
+func (c *Container) TileFromIndex(i int) *Tile {
+	return c.tiles[i]
+}
+
+// returns -1 if tile does not exist in container
+func (c *Container) TileIndexFromTile(tile *Tile) int {
+	for i, t := range c.tiles {
+		if t == tile {
+			return i
+		}
+	}
+	return -1
 }
 
 func (c *Container) worldOp() *ebiten.DrawImageOptions {
@@ -102,13 +134,13 @@ func (c *Container) SetWidth(newWidth int) {
 		newTiles = make([]*Tile, newWidth*c.height)
 		for row := range c.height {
 			for col := range c.width { // copy the original columns first
-				i1 := indexFromCoords(c.width, row, col)
-				i2 := indexFromCoords(newWidth, row, col)
+				i1 := TileIndexFromCoords(c.width, row, col)
+				i2 := TileIndexFromCoords(newWidth, row, col)
 				newTiles[i2] = c.tiles[i1]
 			}
 			// assume size will only expand by one at a time
-			i := indexFromCoords(newWidth, row, newWidth-1)
-			x, y := tilePositionFromIndex(i, newWidth)
+			i := TileIndexFromCoords(newWidth, row, newWidth-1)
+			x, y := TilePositionFromIndex(i, newWidth)
 			newTiles[i] = NewEmptyTile(x, y)
 		}
 	}
@@ -116,8 +148,8 @@ func (c *Container) SetWidth(newWidth int) {
 		newTiles = make([]*Tile, newWidth*c.height)
 		for row := range c.height {
 			for col := range newWidth {
-				i1 := indexFromCoords(c.width, row, col)
-				i2 := indexFromCoords(newWidth, row, col)
+				i1 := TileIndexFromCoords(c.width, row, col)
+				i2 := TileIndexFromCoords(newWidth, row, col)
 				newTiles[i2] = c.tiles[i1]
 			}
 		}
@@ -134,7 +166,7 @@ func (c *Container) SetHeight(newHeight int) {
 	}
 	if d > 0 { // expanding height
 		for i := range c.width {
-			x, y := tilePositionFromIndex(c.height*c.width+i, c.width)
+			x, y := TilePositionFromIndex(c.height*c.width+i, c.width)
 			c.tiles = append(c.tiles, NewEmptyTile(x, y))
 		}
 	}
@@ -142,10 +174,6 @@ func (c *Container) SetHeight(newHeight int) {
 		c.tiles = c.tiles[:len(c.tiles)-c.width]
 	}
 	c.height = newHeight
-}
-
-func indexFromCoords(width int, row, col int) int {
-	return row*width + col
 }
 
 func (c *Container) Update() {}
