@@ -8,7 +8,7 @@ import (
 )
 
 type Button struct {
-	label     Text
+	label     *Text
 	value     string
 	img       *ebiten.Image
 	rect      Rectangle
@@ -41,7 +41,7 @@ const (
 
 var buttonColors = map[ButtonColor]color.Color{
 	Primary:   color.RGBA{10, 70, 255, 255},
-	Secondary: color.Gray{200},
+	Secondary: color.Gray{150},
 	Danger:    color.RGBA{255, 20, 20, 255},
 }
 
@@ -99,12 +99,12 @@ func (b *Button) Update() {
 	}
 }
 
-func (b *Button) Draw(screen *ebiten.Image) {
+func (b *Button) Draw(dst *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(b.rect.x), float64(b.rect.y))
 	if b.isHovered {
 		op.ColorScale.ScaleWithColor(color.Gray{200}) // darken on hover
 	}
-	screen.DrawImage(b.img, op)
-	b.label.Draw(screen)
+	dst.DrawImage(b.img, op)
+	b.label.Draw(dst)
 }

@@ -13,10 +13,10 @@ type NumberPicker struct {
 	buttons  [2]*Button
 	valueImg *ebiten.Image
 	rect     Rectangle
-	text     Text
+	text     *Text
 	minValue int
 	maxValue int
-	label    Text
+	label    *Text
 }
 
 const defaultNPButtonSize = 18
@@ -67,10 +67,10 @@ func (n *NumberPicker) Update() {
 	n.text.CenterInRectangle(n.rect)
 }
 
-func (n *NumberPicker) Draw(screen *ebiten.Image) {
-	n.label.Draw(screen)
+func (n *NumberPicker) Draw(dst *ebiten.Image) {
+	n.label.Draw(dst)
 	for _, btn := range n.buttons {
-		btn.Draw(screen)
+		btn.Draw(dst)
 	}
-	n.text.Draw(screen)
+	n.text.Draw(dst)
 }

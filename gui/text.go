@@ -24,7 +24,7 @@ type Text struct {
 	rect  Rectangle
 }
 
-func NewText(value string, x, y int, size float64, col color.Color) Text {
+func NewText(value string, x, y int, size float64, col color.Color) *Text {
 
 	src, err := text.NewGoTextFaceSource(bytes.NewReader(interTTF))
 	if err != nil {
@@ -37,7 +37,7 @@ func NewText(value string, x, y int, size float64, col color.Color) Text {
 	}
 
 	w, h := text.Measure(value, face, 0)
-	return Text{
+	return &Text{
 		value: value,
 		color: col,
 		size:  size,
@@ -65,8 +65,8 @@ func (t *Text) SetValue(value string) {
 
 func (t *Text) Update() {}
 
-func (t *Text) Draw(screen *ebiten.Image) {
+func (t *Text) Draw(dst *ebiten.Image) {
 	txtOp := &text.DrawOptions{}
 	txtOp.GeoM.Translate(float64(t.rect.x), float64(t.rect.y))
-	text.Draw(screen, t.value, t.face, txtOp)
+	text.Draw(dst, t.value, t.face, txtOp)
 }
