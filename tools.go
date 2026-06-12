@@ -22,11 +22,16 @@ func handleEdits(e *Editor, curTile *Tile) {
 	// flood fill
 	l := e.canvas[e.currLayer]
 	i := TileIndexFromPosition(curTile.x, curTile.y, l.width, l.height)
+
+	visited := make([]int, l.width*l.height)
 	nexts := getNextSteps(i, l.width, l.height, curTile.AtlasIndex)
-	nexts = slices.DeleteFunc(nexts, func(i int) bool { // is bounded by different tiles
+	nexts = slices.DeleteFunc(nexts, func(i int) bool { // filter out un-like tiles
 		tile := l.TileFromIndex(i)
 		return tile.AtlasIndex != curTile.AtlasIndex
 	})
+	for n := range nexts {
+
+	}
 }
 
 // returns up to 4 possible adjacent tiles (will not go OOB)
