@@ -12,10 +12,11 @@ type Palette struct {
 	selectionCursor *Cursor
 }
 
-func NewPaletteFromTileMap(x, y int, path string, tileWidth, tileHeight int, width, count int) *Palette {
-	con := NewContainerFromAtlas(x, y, path, tileWidth, tileHeight, width, count)
-	hCur := NewCursor(tileWidth, tileHeight)
-	sCur := NewCursor(tileWidth, tileHeight)
+func NewPaletteFromTileMap(x, y int, path string) *Palette {
+	con := NewContainerFromAtlas(x, y, path)
+	hCur := NewCursor(TileWidth, TileHeight)
+	sCur := NewCursor(TileWidth, TileHeight)
+	sCur.SelectTile(con.tiles[0])
 	p := Palette{
 		container:       con,
 		hoverCursor:     hCur,

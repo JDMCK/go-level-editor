@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 type InputMode int
@@ -16,10 +19,10 @@ type InputController struct {
 	Mode InputMode
 }
 
-const MoveUpKey = ebiten.KeyW
-const MoveDownKey = ebiten.KeyS
-const MoveLeftKey = ebiten.KeyA
-const MoveRightKey = ebiten.KeyD
+const MovePaletteCursorUpKey = ebiten.KeyW
+const MovePaletteCursorDownKey = ebiten.KeyS
+const MovePaletteCursorLeftKey = ebiten.KeyA
+const MovePaletteCursorRightKey = ebiten.KeyD
 const FreeMoveKey = ebiten.KeySpace
 const Primary = ebiten.MouseButtonLeft
 const Secondary = ebiten.MouseButtonRight
@@ -29,21 +32,14 @@ const ZoomSpeed = 0.1
 
 func (i *InputController) Update(e *Editor) {
 	switch {
-	case isMovementMode():
+	case ebiten.IsKeyPressed(FreeMoveKey):
 		e.ic.Mode = Moving
 	case ebiten.IsKeyPressed(MultiSelect):
 		e.ic.Mode = BlockEdit
 	default:
 		e.ic.Mode = Editing
 	}
-}
-
-func isMovementMode() bool {
-	return ebiten.IsKeyPressed(FreeMoveKey) ||
-		ebiten.IsKeyPressed(MoveUpKey) ||
-		ebiten.IsKeyPressed(MoveDownKey) ||
-		ebiten.IsKeyPressed(MoveLeftKey) ||
-		ebiten.IsKeyPressed(MoveRightKey)
+	handleKeyboardCursorMovement(e.palette)
 }
 
 func handleMouseMovement(e *Editor) (float64, float64) { // mouse drag
@@ -61,22 +57,49 @@ func handleMouseMovement(e *Editor) (float64, float64) { // mouse drag
 	return dx, dy
 }
 
-func handleKeyboardCameraMovement(e *Editor) (float64, float64) {
-	var dx float64 = 0
-	var dy float64 = 0
-	if ebiten.IsKeyPressed(MoveUpKey) {
-		dy += -MovementSpeed / e.camera.zoom
+// Keyboard movement for palette
+func handleKeyboardCursorMovement(p *Palette) {
+	c := p.selectionCursor
+	pWidth := p.container.width
+	pHeight := p.container.height
+	if c.Tile == nil {
+		return
 	}
-	if ebiten.IsKeyPressed(MoveDownKey) {
-		dy += MovementSpeed / e.camera.zoom
+
+	cIndex := TileIndexFromPosition(c.Tile.x, c.Tile.y, pWidth, pHeight)
+	i := -1
+
+	switch {
+	case inpututil.IsKeyJustPressed(MovePaletteCursorUpKey):
+		if cIndex < pWidth {
+			i = cIndex + pWidth*(pHeight-1)
+			fmt.Println(i, cIndex)
+		} else {
+			i = cIndex - pWidth
+		}
+	case inpututil.IsKeyJustPressed(MovePaletteCursorDownKey):
+		if cIndex/pWidth == pHeight-1 {
+			i = cIndex - pWidth*(pHeight-1)
+		} else {
+			i = cIndex + pWidth
+		}
+	case inpututil.IsKeyJustPressed(MovePaletteCursorLeftKey):
+		if cIndex%pWidth == 0 {
+			i = cIndex + pWidth - 1
+		} else {
+			i = cIndex - 1
+		}
+	case inpututil.IsKeyJustPressed(MovePaletteCursorRightKey):
+		if cIndex%pWidth == pWidth-1 {
+			i = cIndex - pWidth + 1
+		} else {
+			i = cIndex + 1
+		}
 	}
-	if ebiten.IsKeyPressed(MoveLeftKey) {
-		dx += -MovementSpeed / e.camera.zoom
+	if i == -1 {
+		return
 	}
-	if ebiten.IsKeyPressed(MoveRightKey) {
-		dx += MovementSpeed / e.camera.zoom
-	}
-	return dx, dy
+	c.SelectTile(p.container.tiles[i])
 }
 
 func CursorPosition(op *ebiten.DrawImageOptions) (int, int) {

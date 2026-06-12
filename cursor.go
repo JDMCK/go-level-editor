@@ -10,7 +10,7 @@ import (
 // highlights tiles
 type Cursor struct {
 	width, height         int
-	tileWidth, tileHeight int
+	TileWidth, TileHeight int
 	Tile                  *Tile
 	enabled               bool
 	img                   *ebiten.Image
@@ -18,13 +18,13 @@ type Cursor struct {
 
 const HighlightWidth = 2
 
-func NewCursor(tileWidth, tileHeight int) *Cursor {
+func NewCursor(TileWidth, TileHeight int) *Cursor {
 	return &Cursor{
 		width:      1,
 		height:     1,
-		tileWidth:  tileWidth,
-		tileHeight: tileHeight,
-		img:        ebiten.NewImage(HighlightWidth*2+tileWidth, HighlightWidth*2+tileHeight),
+		TileWidth:  TileWidth,
+		TileHeight: TileHeight,
+		img:        ebiten.NewImage(HighlightWidth*2+TileWidth, HighlightWidth*2+TileHeight),
 	}
 }
 
@@ -54,8 +54,8 @@ func (c *Cursor) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
 	newOp.GeoM.Translate(float64(c.Tile.x), float64(c.Tile.y))
 	newOp.GeoM.Concat(op.GeoM)
 
-	w := c.width * c.tileWidth
-	h := c.height * c.tileHeight
+	w := c.width * c.TileWidth
+	h := c.height * c.TileHeight
 	x0, y0 := newOp.GeoM.Apply(0, 0)
 	x1, y1 := newOp.GeoM.Apply(float64(w), float64(h))
 

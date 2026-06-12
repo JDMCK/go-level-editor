@@ -1,0 +1,8 @@
+atlas_path=assets/basictiles.png
+tile_width=16
+tile_height=16
+map_width=32
+map_height=16
+layer_0=0 0 0 0 0 0 0 _25 0 0 0 0 0 0 0 _25 0 0 0 0 0 0 0 _25 0 0 0 0 0 0 0 _27 0 0 _380 
+layer_1=_34 21 _1 37 _29 21 _1 37 _31 37 37 _31 37 _31 37 _31 37 _314 
+layer_2=_512 

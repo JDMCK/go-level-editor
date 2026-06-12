@@ -1,19 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"image/color"
 	gui "level-editor/gui"
-	"log"
+	"os"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	eb "github.com/hajimehoshi/ebiten/v2"
 	"github.com/sqweek/dialog"
 )
-
-const TileSize = 16
-const CanvasWidth = 25
-const CanvasHeight = 25
 
 var ScreenWidth = 1920
 var ScreenHeight = 1080
@@ -21,6 +19,9 @@ var ScreenHeight = 1080
 const DefaultLayerCount = 3
 const MinLayerCount = 1
 const MaxLayerCount = 10
+
+var CanvasWidth int = 32
+var CanvasHeight int = 16
 
 type Editor struct {
 	camera *Camera
@@ -36,8 +37,6 @@ type Editor struct {
 
 	ic     InputController
 	cursor *Cursor
-
-	showGUI bool
 }
 
 type Drawable interface {
@@ -49,22 +48,21 @@ func NewEditor() *Editor {
 
 	e.camera = NewCamera(3)
 	e.camera.CenterScreenOffset(ScreenWidth, ScreenHeight)
-	e.camera.focusX += CanvasWidth * TileSize / 2
-	e.camera.focusY += CanvasHeight * TileSize / 2
+	e.camera.focusX += float64(CanvasWidth * TileWidth / 2)
+	e.camera.focusY += float64(CanvasHeight * TileHeight / 2)
 
 	layers := buildCanvas()
 	e.canvas = layers
 	e.layerVisibility = make([]bool, MaxLayerCount)
 
-	cursor := NewCursor(TileSize, TileSize)
+	cursor := NewCursor(*TileSize, *TileSize)
 	e.cursor = cursor
 
 	// p := NewPaletteFromTileMap(10, 10, "assets/dungeon.png", 16, 16, 6, 18)
-	p := NewPaletteFromTileMap(10, 10, "assets/basictiles.png", 16, 16, 8, 120)
+	p := NewPaletteFromTileMap(10, 10, *AtlasPath)
 	e.palette = p
 
 	e.GUI = buildGUI(&e)
-	e.showGUI = true
 
 	return &e
 }
@@ -101,10 +99,8 @@ func (e *Editor) Draw(screen *eb.Image) {
 
 	e.palette.Draw(screen)
 
-	if e.showGUI {
-		for _, el := range e.GUI {
-			el.Draw(screen)
-		}
+	for _, el := range e.GUI {
+		el.Draw(screen)
 	}
 }
 
@@ -127,7 +123,7 @@ func handleEditMode(e *Editor) {
 	if eb.IsMouseButtonPressed(Primary) {
 		tile := e.palette.SelectedTile()
 		if tile != nil && curTile != nil {
-			curTile.img = tile.img
+			curTile.SetImg(tile.img, tile.AtlasIndex)
 		}
 	}
 	if eb.IsMouseButtonPressed(Secondary) {
@@ -139,11 +135,7 @@ func handleBlockEditMode(e *Editor) {
 }
 
 func handleMovingMode(e *Editor) {
-	kdx, kdy := handleKeyboardCameraMovement(e)
-	mdx, mdy := handleMouseMovement(e)
-
-	dx, dy := kdx+mdx, kdy+mdy
-
+	dx, dy := handleMouseMovement(e)
 	e.camera.focusX += dx
 	e.camera.focusY += dy
 }
@@ -156,7 +148,7 @@ func handleZoom(e *Editor) {
 func buildCanvas() []*Container {
 	layers := make([]*Container, 0, MaxLayerCount)
 	for range DefaultLayerCount {
-		layers = append(layers, NewEmptyContainer(0, 0, TileSize, TileSize, CanvasWidth, CanvasHeight))
+		layers = append(layers, NewEmptyContainer(0, 0, CanvasWidth, CanvasHeight))
 	}
 	return layers
 }
@@ -165,11 +157,8 @@ func buildGUI(e *Editor) []gui.Element {
 	rootX, rootY := ScreenWidth-250, 50
 	gap := 60
 	guiEls := make([]gui.Element, 0)
-	// guiEls = append(guiEls, gui.NewBasicButton("Save", 50, 50, gui.Large, gui.Primary, func() { fmt.Println("Saved") }))
-	// guiEls = append(guiEls, gui.NewBasicButton("Cancel", 50, 100, gui.Small, gui.Secondary, func() { fmt.Println("Cancel") }))
-	// guiEls = append(guiEls, gui.NewBasicButton("Delete", 50, 150, gui.Medium, gui.Danger, func() { fmt.Println("Delete") }))
-	// guiEls = append(guiEls, gui.NewNumberPicker(1, 5, 0, 50, 200))
-	// guiEls = append(guiEls, gui.NewCheckbox(50, 250))
+
+	// callback methods
 	clearCanvas := func() {
 		e.canvas[e.currLayer].Clear()
 	}
@@ -179,7 +168,7 @@ func buildGUI(e *Editor) []gui.Element {
 		}
 		if val > len(e.canvas) {
 			// diff between val and canvas len can only ever be max 1
-			e.canvas = append(e.canvas, NewEmptyContainer(0, 0, TileSize, TileSize, CanvasWidth, CanvasHeight))
+			e.canvas = append(e.canvas, NewEmptyContainer(0, 0, CanvasWidth, CanvasHeight))
 			e.layerVisibility[len(e.canvas)-1] = true
 		}
 		if len(e.canvas) > val {
@@ -188,13 +177,23 @@ func buildGUI(e *Editor) []gui.Element {
 		e.currLayer = val - 1
 		e.GUI = buildGUI(e) // rebuild gui to have more layer buttons
 	}
-	saveLevel := newSaveAction()
+	saveLevel := newSaveAction(e)
 	toggleLayer := func(visible bool, i int) {
 		e.layerVisibility[i] = visible
 	}
 	layerChange := func(i int) {
 		e.currLayer = i
 		e.GUI = buildGUI(e) // rebuild gui to update current layer label (terribly inefficient, I know)
+	}
+	canvasWidthChange := func(val int) {
+		for _, l := range e.canvas {
+			l.SetWidth(val)
+		}
+	}
+	canvasHeightChange := func(val int) {
+		for _, l := range e.canvas {
+			l.SetHeight(val)
+		}
 	}
 
 	guiEls = append(guiEls, gui.NewBasicButton("Save", rootX, rootY, gui.Large, gui.Primary, saveLevel))
@@ -205,22 +204,54 @@ func buildGUI(e *Editor) []gui.Element {
 		guiEls = append(guiEls, gui.NewCheckbox(rootX, rootY+(i+4)*gap, true, func(visible bool) { toggleLayer(visible, i) }))
 		guiEls = append(guiEls, gui.NewBasicButton(fmt.Sprintf("Edit Layer %d", i+1), rootX+gap, rootY+(i+4)*gap, gui.Medium, gui.Secondary, func() { layerChange(i) }))
 	}
+	guiEls = append(guiEls, gui.NewNumberPicker("Canvas Width", CanvasWidth, 1, 300, rootX+2*gap, ScreenHeight-3*gap, canvasWidthChange))
+	guiEls = append(guiEls, gui.NewNumberPicker("Canvas Height", CanvasHeight, 1, 300, rootX+2*gap, ScreenHeight-2*gap, canvasHeightChange))
 
 	return guiEls
 }
 
-func newSaveAction() func() {
+func newSaveAction(e *Editor) func() {
 	return func() {
-		file, err := dialog.
+		filePath, _ := dialog.
 			File().
 			Title("Save Level").
 			SetStartFile("level00.config.map").
-			Filter("map", "txt").
+			Filter(".map").
 			Save()
-		if err != nil {
-			log.Fatal(err)
-		}
 
-		fmt.Println("Selected file:", file)
+		buf := bytes.Buffer{}
+
+		// atlas info
+		buf.WriteString(
+			fmt.Sprintf(`atlas_path=%s
+tile_width=%d
+tile_height=%d
+map_width=%d
+map_height=%d`, *AtlasPath, TileWidth, TileHeight, CanvasWidth, CanvasHeight))
+		for i, l := range e.canvas {
+			buf.WriteString("\n")
+			buf.WriteString(generateLayerString(i, l))
+		}
+		os.WriteFile(filePath, buf.Bytes(), 0644)
 	}
+}
+
+func generateLayerString(i int, l *Container) string {
+	sb := strings.Builder{}
+	fmt.Fprintf(&sb, "layer_%d=", i)
+
+	consecEmpty := 0
+	for _, t := range l.tiles {
+		if t.AtlasIndex == -1 {
+			consecEmpty++
+			continue
+		}
+		if consecEmpty > 0 {
+			fmt.Fprintf(&sb, "_%d ", consecEmpty)
+			consecEmpty = 0
+		}
+		fmt.Fprintf(&sb, "%d ", t.AtlasIndex)
+	}
+	fmt.Fprintf(&sb, "_%d ", consecEmpty)
+	return sb.String()
 }
