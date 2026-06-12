@@ -1,16 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"image/color"
 	gui "level-editor/gui"
-	"os"
-	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	eb "github.com/hajimehoshi/ebiten/v2"
-	"github.com/sqweek/dialog"
 )
 
 var ScreenWidth = 1920
@@ -58,7 +54,6 @@ func NewEditor() *Editor {
 	cursor := NewCursor(*TileSize, *TileSize)
 	e.cursor = cursor
 
-	// p := NewPaletteFromTileMap(10, 10, "assets/dungeon.png", 16, 16, 6, 18)
 	p := NewPaletteFromTileMap(10, 10, *AtlasPath)
 	e.palette = p
 
@@ -177,7 +172,7 @@ func buildGUI(e *Editor) []gui.Element {
 		e.currLayer = val - 1
 		e.GUI = buildGUI(e) // rebuild gui to have more layer buttons
 	}
-	saveLevel := newSaveAction(e)
+	saveLevel := NewSaveAction(e)
 	toggleLayer := func(visible bool, i int) {
 		e.layerVisibility[i] = visible
 	}
@@ -208,50 +203,4 @@ func buildGUI(e *Editor) []gui.Element {
 	guiEls = append(guiEls, gui.NewNumberPicker("Canvas Height", CanvasHeight, 1, 300, rootX+2*gap, ScreenHeight-2*gap, canvasHeightChange))
 
 	return guiEls
-}
-
-func newSaveAction(e *Editor) func() {
-	return func() {
-		filePath, _ := dialog.
-			File().
-			Title("Save Level").
-			SetStartFile("level00.config.map").
-			Filter(".map").
-			Save()
-
-		buf := bytes.Buffer{}
-
-		// atlas info
-		buf.WriteString(
-			fmt.Sprintf(`atlas_path=%s
-tile_width=%d
-tile_height=%d
-map_width=%d
-map_height=%d`, *AtlasPath, TileWidth, TileHeight, CanvasWidth, CanvasHeight))
-		for i, l := range e.canvas {
-			buf.WriteString("\n")
-			buf.WriteString(generateLayerString(i, l))
-		}
-		os.WriteFile(filePath, buf.Bytes(), 0644)
-	}
-}
-
-func generateLayerString(i int, l *Container) string {
-	sb := strings.Builder{}
-	fmt.Fprintf(&sb, "layer_%d=", i)
-
-	consecEmpty := 0
-	for _, t := range l.tiles {
-		if t.AtlasIndex == -1 {
-			consecEmpty++
-			continue
-		}
-		if consecEmpty > 0 {
-			fmt.Fprintf(&sb, "_%d ", consecEmpty)
-			consecEmpty = 0
-		}
-		fmt.Fprintf(&sb, "%d ", t.AtlasIndex)
-	}
-	fmt.Fprintf(&sb, "_%d ", consecEmpty)
-	return sb.String()
 }
