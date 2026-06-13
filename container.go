@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"log"
@@ -24,6 +25,29 @@ func NewEmptyContainer(x, y int, width, height int) *Container {
 	for i := range width * height {
 		x, y := TilePositionFromIndex(i, width)
 		tiles = append(tiles, NewEmptyTile(x, y))
+	}
+	return &Container{
+		width:  width,
+		height: height,
+		x:      x,
+		y:      y,
+		tiles:  tiles,
+	}
+}
+
+// for importing existing maps
+func NewContainerFromAtlasIndices(x, y int, width, height int, layer int, p *Palette) *Container {
+	tiles := make([]*Tile, 0, width*height)
+	for i := range width * height {
+		x, y := TilePositionFromIndex(i, width)
+		atlasIndex := ImportedLayerIndices[layer][i]
+		tile := p.TileFromAtlasIndex(atlasIndex)
+		if tile == nil {
+			tiles = append(tiles, NewEmptyTile(x, y))
+		} else {
+			fmt.Println(x, y, atlasIndex, tile.img)
+			tiles = append(tiles, NewTile(x, y, tile.img, atlasIndex))
+		}
 	}
 	return &Container{
 		width:  width,

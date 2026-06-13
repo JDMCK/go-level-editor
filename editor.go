@@ -47,15 +47,15 @@ func NewEditor() *Editor {
 	e.camera.focusX += float64(CanvasWidth * TileWidth / 2)
 	e.camera.focusY += float64(CanvasHeight * TileHeight / 2)
 
-	layers := buildCanvas()
-	e.canvas = layers
-	e.layerVisibility = make([]bool, MaxLayerCount)
-
-	cursor := NewCursor(*TileSize, *TileSize)
+	cursor := NewCursor(TileWidth, TileHeight)
 	e.cursor = cursor
 
 	p := NewPaletteFromTileMap(10, 10, *AtlasPath)
 	e.palette = p
+
+	layers := buildCanvas(p)
+	e.canvas = layers
+	e.layerVisibility = make([]bool, MaxLayerCount)
 
 	e.GUI = buildGUI(&e)
 
@@ -135,7 +135,14 @@ func handleZoom(e *Editor) {
 	e.camera.zoom -= yoff * ZoomSpeed
 }
 
-func buildCanvas() []*Container {
+func buildCanvas(p *Palette) []*Container {
+	importedLayersLen := len(ImportedLayerIndices)
+	if importedLayersLen != 0 {
+		layers := make([]*Container, 0, importedLayersLen)
+		for i := range importedLayersLen {
+			layers = append(layers, NewContainerFromAtlasIndices(0, 0, CanvasWidth, CanvasHeight, i, p))
+		}
+	}
 	layers := make([]*Container, 0, MaxLayerCount)
 	for range DefaultLayerCount {
 		layers = append(layers, NewEmptyContainer(0, 0, CanvasWidth, CanvasHeight))

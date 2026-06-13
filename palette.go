@@ -42,6 +42,15 @@ func (p *Palette) SelectedTile() *Tile {
 	return p.selectionCursor.Tile
 }
 
+func (p *Palette) TileFromAtlasIndex(i int) *Tile {
+	for _, t := range p.container.tiles {
+		if t.AtlasIndex == i {
+			return t
+		}
+	}
+	return nil
+}
+
 func (p *Palette) Draw(screen *ebiten.Image) {
 	op := ebiten.DrawImageOptions{}
 	op.GeoM.Scale(PaletteScale, PaletteScale)

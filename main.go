@@ -8,25 +8,28 @@ import (
 )
 
 var AtlasPath *string
-var ImportPath *string
+var MapImportPath *string
 var TileSize *int
 var TileWidth int
 var TileHeight int
+var ImportedLayerIndices [][]int
 
 func main() {
 	AtlasPath = flag.String("path", "", "File path to atlas relative to the folder this program is being run from.")
-	ImportPath = flag.String("import_path", "", "File path to map file (for importing and editing a saved level).")
+	MapImportPath = flag.String("map", "", "File path to map file (for importing and editing a saved level).")
 	TileSize = flag.Int("tile_size", 0, "The width and height in pixels of the tiles in the atlas (only square tiles supported).")
 
 	flag.Parse()
 
-	if *AtlasPath == "" ||
+	if *MapImportPath != "" {
+		ImportMap()
+	} else if *AtlasPath == "" ||
 		*TileSize == 0 {
 		log.Fatal("Invalid or missing params. Use -h or -help for more information.")
+	} else {
+		TileWidth = *TileSize
+		TileHeight = *TileSize
 	}
-
-	TileWidth = *TileSize
-	TileHeight = *TileSize
 
 	editor := NewEditor()
 	eb.SetWindowSize(ScreenWidth, ScreenHeight)

@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/sqweek/dialog"
@@ -64,56 +66,62 @@ func generateLayerString(i int, l *Container) string {
 	return sb.String()
 }
 
-// func ImportMap() {
-// 	data, err := os.ReadFile(*ImportPath)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	lines := strings.Split(string(data), "\n")
-
-// 	var (
-// 		tileWidth  int
-// 		tileHeight int
-// 		mapWidth   int
-// 		mapHeight  int
-// 		img        *eb.Image
-// 	)
-
-// 	for _, line := range lines {
-// 		k, v, err := parseKV(line)
-// 		if err != nil {
-// 			continue // likely a comment or blank line
-// 		}
-// 		switch k {
-// 		case "atlas_path":
-// 			img, _, err = ebitenutil.NewImageFromFile(v)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 		case "tile_width":
-// 			tileWidth, err = strconv.Atoi(v)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 		case "tile_height":
-// 			tileHeight, err = strconv.Atoi(v)
-// 			if err != nil {
-// 				return nil, err
-// 			}
-// 		}
-// 	}
-
-// 	size := img.Bounds().Size()
-// 	rows := size.Y / frameHeight
-// 	cols := size.X / frameWidth
-
-// 	return gfx.NewAtlas(img, rows, cols, frameWidth, frameHeight), nil
-// }
-
-func parseKV(line string) (string, string, error) {
-	key, value, found := strings.Cut(line, "=")
-	if !found {
-		return "", "", fmt.Errorf("Invalid line %s", line)
+func ImportMap() {
+	data, err := os.ReadFile(*MapImportPath)
+	if err != nil {
+		log.Fatal(err)
 	}
-	return strings.ToLower(strings.TrimSpace(key)), strings.TrimSpace(value), nil
+	lines := strings.SplitSeq(string(data), "\n")
+
+	ImportedLayerIndices = make([][]int, 0, DefaultLayerCount)
+
+	for line := range lines {
+		k, v, found := parseKV(line)
+		if found == false {
+			continue // likely a comment or blank line
+		}
+		switch k {
+		case "atlas_path":
+			AtlasPath = &v
+		case "tile_width":
+			TileWidth, _ = strconv.Atoi(v)
+		case "tile_height":
+			TileHeight, _ = strconv.Atoi(v)
+		case "map_width":
+			CanvasWidth, _ = strconv.Atoi(v)
+		case "map_height":
+			CanvasHeight, _ = strconv.Atoi(v)
+		}
+
+		if strings.HasPrefix(k, "layer_") {
+			var layer int
+			fmt.Sscanf(k, "layer_%d", &layer)
+			ImportedLayerIndices = append(ImportedLayerIndices, parseLayer(v))
+		}
+	}
+}
+
+func parseLayer(data string) []int {
+	parts := strings.Split(data, " ")
+	indices := make([]int, 0, CanvasWidth*CanvasHeight)
+	for _, p := range parts {
+		atlasIndex, count, _ := strings.Cut(p, "-")
+		countN, _ := strconv.Atoi(count)
+		if atlasIndex == "" {
+			for range countN {
+				indices = append(indices, -1)
+			}
+			continue
+		}
+		for range countN {
+			i, _ := strconv.Atoi(atlasIndex)
+			indices = append(indices, i)
+		}
+	}
+	return indices
+}
+
+func parseKV(line string) (string, string, bool) {
+	key, value, found := strings.Cut(line, "=")
+	return strings.ToLower(strings.TrimSpace(key)), strings.TrimSpace(value), found
 }
