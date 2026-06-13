@@ -26,6 +26,7 @@ const MovePaletteCursorRightKey = ebiten.KeyD
 const FreeMoveKey = ebiten.KeySpace
 const Primary = ebiten.MouseButtonLeft
 const Secondary = ebiten.MouseButtonRight
+const Tertiary = ebiten.MouseButtonMiddle
 const MultiSelect = ebiten.KeyControl // TODO
 const MovementSpeed = 10
 const ZoomSpeed = 0.1
