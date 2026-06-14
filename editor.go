@@ -142,6 +142,7 @@ func buildCanvas(p *Palette) []*Container {
 		for i := range importedLayersLen {
 			layers = append(layers, NewContainerFromAtlasIndices(0, 0, CanvasWidth, CanvasHeight, i, p))
 		}
+		return layers
 	}
 	layers := make([]*Container, 0, MaxLayerCount)
 	for range DefaultLayerCount {

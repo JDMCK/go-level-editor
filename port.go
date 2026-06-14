@@ -8,27 +8,30 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sqweek/dialog"
+	"github.com/ncruces/zenity"
 )
 
 func NewSaveAction(e *Editor) func() {
 	return func() {
-		filePath, _ := dialog.
-			File().
-			Title("Save Level").
-			SetStartFile("level00.config.map").
-			Filter(".map").
-			Save()
+		filePath, _ := zenity.SelectFileSave(
+			zenity.Title("Save Level"),
+			zenity.Filename("level00.config.map"),
+			zenity.FileFilters{
+				{
+					Name:     "Map Files",
+					Patterns: []string{"*.map"},
+				},
+			},
+		)
 
 		buf := bytes.Buffer{}
 
 		// atlas info
-		buf.WriteString(
-			fmt.Sprintf(`atlas_path=%s
+		fmt.Fprintf(&buf, `atlas_path=%s
 tile_width=%d
 tile_height=%d
 map_width=%d
-map_height=%d`, *AtlasPath, TileWidth, TileHeight, CanvasWidth, CanvasHeight))
+map_height=%d`, *AtlasPath, TileWidth, TileHeight, CanvasWidth, CanvasHeight)
 		for i, l := range e.canvas {
 			buf.WriteString("\n")
 			buf.WriteString(generateLayerString(i, l))
@@ -103,9 +106,13 @@ func ImportMap() {
 
 func parseLayer(data string) []int {
 	parts := strings.Split(data, " ")
-	indices := make([]int, 0, CanvasWidth*CanvasHeight)
+	finalLen := CanvasWidth * CanvasHeight
+	indices := make([]int, 0, finalLen)
 	for _, p := range parts {
 		atlasIndex, count, _ := strings.Cut(p, "-")
+		if count == "" {
+			log.Fatal("Failed to parse layer.")
+		}
 		countN, _ := strconv.Atoi(count)
 		if atlasIndex == "" {
 			for range countN {
@@ -117,6 +124,9 @@ func parseLayer(data string) []int {
 			i, _ := strconv.Atoi(atlasIndex)
 			indices = append(indices, i)
 		}
+	}
+	if len(indices) != finalLen {
+		log.Fatal("Failed to parse layer.")
 	}
 	return indices
 }
