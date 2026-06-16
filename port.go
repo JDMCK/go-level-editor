@@ -15,7 +15,7 @@ func NewSaveAction(e *Editor) func() {
 	return func() {
 		filePath, _ := zenity.SelectFileSave(
 			zenity.Title("Save Level"),
-			zenity.Filename("level00.config.map"),
+			zenity.Filename("level00.map.config"),
 			zenity.FileFilters{
 				{
 					Name:     "Map Files",
