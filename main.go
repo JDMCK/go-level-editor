@@ -29,7 +29,7 @@ func main() {
 			zenity.FileFilters{
 				{
 					Name:     "Map Files",
-					Patterns: []string{"*.map"},
+					Patterns: []string{"*.map.config"},
 				},
 			},
 		)

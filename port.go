@@ -19,7 +19,7 @@ func NewSaveAction(e *Editor) func() {
 			zenity.FileFilters{
 				{
 					Name:     "Map Files",
-					Patterns: []string{"*.map"},
+					Patterns: []string{"*.map.config"},
 				},
 			},
 		)
@@ -28,8 +28,8 @@ func NewSaveAction(e *Editor) func() {
 
 		// atlas info
 		fmt.Fprintf(&buf, `atlas_path=%s
-tile_width=%d
-tile_height=%d
+frame_width=%d
+frame_height=%d
 map_width=%d
 map_height=%d`, *AtlasPath, TileWidth, TileHeight, CanvasWidth, CanvasHeight)
 		for i, l := range e.canvas {
@@ -86,9 +86,9 @@ func ImportMap() {
 		switch k {
 		case "atlas_path":
 			AtlasPath = &v
-		case "tile_width":
+		case "frame_width":
 			TileWidth, _ = strconv.Atoi(v)
-		case "tile_height":
+		case "frame_height":
 			TileHeight, _ = strconv.Atoi(v)
 		case "map_width":
 			CanvasWidth, _ = strconv.Atoi(v)

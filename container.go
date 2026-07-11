@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"log"
@@ -45,7 +44,6 @@ func NewContainerFromAtlasIndices(x, y int, width, height int, layer int, p *Pal
 		if tile == nil {
 			tiles = append(tiles, NewEmptyTile(x, y))
 		} else {
-			fmt.Println(x, y, atlasIndex, tile.img)
 			tiles = append(tiles, NewTile(x, y, tile.img, atlasIndex))
 		}
 	}

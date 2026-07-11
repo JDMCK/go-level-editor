@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
@@ -74,7 +72,6 @@ func handleKeyboardCursorMovement(p *Palette) {
 	case inpututil.IsKeyJustPressed(MovePaletteCursorUpKey):
 		if cIndex < pWidth {
 			i = cIndex + pWidth*(pHeight-1)
-			fmt.Println(i, cIndex)
 		} else {
 			i = cIndex - pWidth
 		}
